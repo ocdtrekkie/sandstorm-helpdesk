@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>{% block title %}Help desk{% endblock %} · {{ header_title }}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='app.css') }}">
+<script defer src="{{ url_for('static',filename='app.js') }}"></script>
+</head>
+<body>
+<header><a class="brand" href="{{ url_for('ticket_list') }}">{{ header_title }}</a>
+<nav aria-label="Main">
+{% if actor and actor.has('createTickets') %}<a href="{{ url_for('ticket_list',scope='mine') }}">My tickets</a><a href="{{ url_for('new_ticket') }}">New ticket</a>{% endif %}
+{% if actor and actor.has('viewAllTickets') %}<a href="{{ url_for('ticket_list',scope='all') }}">All tickets</a>{% endif %}
+{% if actor and actor.has('manageSettings') %}<a href="{{ url_for('admin') }}">Settings</a>{% endif %}
+</nav><span class="identity">{{ actor.name if actor else 'Help desk' }}</span></header>
+{% if dev_mode %}<div class="dev-banner">Local development mode — fixed test identity. Never expose this mode to other users.</div>{% endif %}
+<main>
+{% for message in get_flashed_messages() %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</main>
+<footer>Shared help desk · All timestamps are UTC.</footer>
+</body></html>

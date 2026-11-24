@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% from 'macros.html' import csrf, editor, upload with context %}
+{% block title %}New ticket{% endblock %}
+{% block content %}<h1>New ticket</h1>
+{% if error %}<div class="error" role="alert">{{ error }} Your text is preserved; reselect any images before submitting again.</div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="panel stack">{{ csrf() }}
+<label for="subject">Subject</label><input id="subject" name="subject" maxlength="200" required value="{{ request.form.get('subject','') }}">
+<div class="columns"><label>Category<select name="category" required>{% for c in categories %}<option value="{{ c.id }}" {% if request.form.get('category') == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label>
+<label>Priority<select name="priority" required>{% for p in priorities %}<option value="{{ p.id }}" {% if request.form.get('priority') == p.id|string or (not request.form and p.name == 'Normal') %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></label></div>
+{{ editor('description','Description',true,request.form.get('body','')) }}
+{{ upload('ticket-images') }}
+<div><button>Create ticket</button></div></form>{% endblock %}

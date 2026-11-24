@@ -1,0 +1,55 @@
+@0xee63e95bd102ac71;
+using Spk = import "/sandstorm/package.capnp";
+
+# Run: python tools/configure_sandstorm.py YOUR_APP_ID
+# Generate YOUR_APP_ID using spk keygen in your Sandstorm build environment.
+const pkgdef :Spk.PackageDefinition = (
+  id = "@@APP_ID@@",
+  manifest = (
+    appTitle = (defaultText = "Sandstorm Help Desk"),
+    appVersion = 2,
+    appMarketingVersion = (defaultText = "0.1.1"),
+    actions = [(nounPhrase = (defaultText = "help desk"), command = .helpdeskCommand)],
+    continueCommand = .helpdeskCommand,
+    metadata = (
+      shortDescription = (defaultText = "Help desk tickets"),
+      description = (defaultText = "A shared help desk with requester, supervisor, technician, and administrator access.")
+    )
+  ),
+  sourceMap = (
+    searchPath = [
+      (packagePath = "opt/helpdesk", sourcePath = ".", hidePaths = ["instance", ".venv", ".git", "output"]),
+      (sourcePath = "/", hidePaths = ["home", "proc", "sys", "root", "etc/passwd", "etc/hosts", "etc/host.conf", "etc/nsswitch.conf", "etc/resolv.conf"])
+    ]
+  ),
+  fileList = "sandstorm-files.list",
+  alwaysInclude = ["opt/helpdesk/helpdesk", "opt/helpdesk/run.py", "opt/helpdesk/sandstorm/launcher.sh", "opt/helpdesk-env"],
+  bridgeConfig = (
+    viewInfo = (
+      # These positions are persistent API: append only; never reorder or remove.
+      permissions = [
+        (name = "createTickets", title = (defaultText = "Create tickets"), description = (defaultText = "Create and view own tickets, and comment on own open tickets.")),
+        (name = "viewAllTickets", title = (defaultText = "View all tickets"), description = (defaultText = "Read all tickets, comments, and images.")),
+        (name = "respondToTickets", title = (defaultText = "Respond to tickets"), description = (defaultText = "Comment on any open ticket.")),
+        (name = "manageTickets", title = (defaultText = "Manage tickets"), description = (defaultText = "Close and reopen any ticket and update classification.")),
+        (name = "manageSettings", title = (defaultText = "Manage settings"), description = (defaultText = "Configure categories, priorities, and requester reopening."))
+      ],
+      roles = [
+        (title = (defaultText = "Requester"), permissions = [true, false, false, false, false], verbPhrase = (defaultText = "can create and discuss own tickets")),
+        (title = (defaultText = "Supervisor"), permissions = [true, true, false, false, false], verbPhrase = (defaultText = "can read all tickets and discuss own tickets")),
+        (title = (defaultText = "Technician"), permissions = [true, true, true, true, false], verbPhrase = (defaultText = "can respond to, close, and reopen any ticket")),
+        (title = (defaultText = "Administrator"), permissions = [true, true, true, true, true], verbPhrase = (defaultText = "can manage all tickets and settings"))
+      ]
+    )
+  )
+);
+const helpdeskCommand :Spk.Manifest.Command = (
+  argv = ["/sandstorm-http-bridge", "8000", "--", "/bin/sh", "/opt/helpdesk/sandstorm/launcher.sh"],
+  environ = [
+    (key = "PATH", value = "/opt/helpdesk-env/bin:/usr/bin:/bin"),
+    (key = "HOME", value = "/var"),
+    (key = "LANG", value = "C.UTF-8"),
+    (key = "PYTHONDONTWRITEBYTECODE", value = "1"),
+    (key = "SANDSTORM", value = "1")
+  ]
+);

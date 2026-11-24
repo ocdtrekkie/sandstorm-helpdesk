@@ -1,0 +1,30 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token }}">{% endmacro %}
+{% macro editor(id, label, required=false, value='') %}
+<div class="editor">
+<label for="{{ id }}">{{ label }}</label>
+<div class="toolbar" role="group" aria-label="Text formatting">
+<button type="button" data-editor="{{ id }}" data-format="bold">Bold</button>
+<button type="button" data-editor="{{ id }}" data-format="italic">Italic</button>
+<button type="button" data-editor="{{ id }}" data-format="list">List</button>
+<button type="button" data-editor="{{ id }}" data-format="quote">Quote</button>
+<button type="button" data-editor="{{ id }}" data-format="code">Code</button>
+<button type="button" data-preview="{{ id }}" data-url="{{ url_for('preview') }}">Preview</button>
+</div>
+<textarea id="{{ id }}" name="body" rows="9" maxlength="50000" {% if required %}required{% endif %}>{{ value }}</textarea>
+<p class="hint">Markdown supported. Raw HTML and remote embedded images are disabled.</p>
+<div class="preview markdown" id="{{ id }}-preview" hidden aria-live="polite"></div>
+</div>
+{% endmacro %}
+{% macro upload(id) %}
+<label for="{{ id }}">Attach images</label>
+<input id="{{ id }}" type="file" name="images" multiple accept="image/png,image/jpeg,image/gif,image/webp">
+<p class="hint">Up to 10 images, 10 MB and 20 megapixels each. Images are normalized to PNG; animations use the first frame.</p>
+{% endmacro %}
+{% macro gallery(images, comment_id) %}
+<div class="gallery">
+{% for image in images if image.comment_id == comment_id %}
+<figure><a href="{{ url_for('attachment',aid=image.id) }}" target="_blank" rel="noopener"><img loading="lazy" src="{{ url_for('attachment',aid=image.id) }}" alt="{{ image.original_name }}"></a>
+<figcaption>{{ image.original_name }} · <a href="{{ url_for('attachment',aid=image.id,download=1) }}">Download</a></figcaption></figure>
+{% endfor %}
+</div>
+{% endmacro %}

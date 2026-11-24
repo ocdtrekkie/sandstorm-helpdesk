@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% from 'macros.html' import csrf with context %}
+{% block title %}Settings{% endblock %}
+{% block content %}<h1>Help desk settings</h1>
+<form method="post" action="{{ url_for('branding') }}" class="panel stack">
+{{ csrf() }}
+<h2>Appearance</h2>
+<label for="header-title">Header title</label>
+<input id="header-title" name="header_title" value="{{ header_title }}" maxlength="80" required>
+<p class="hint">Shown in the top-left corner and browser page titles for everyone in this help desk. Theme colors automatically follow each user's light/dark preference.</p>
+<div><button>Save title</button></div>
+</form>
+
+<form method="post" action="{{ url_for('policy') }}" class="panel stack">{{ csrf() }}<h2>Reopening policy</h2><label class="check"><input type="checkbox" name="allow_requester_reopen" value="1" {% if allowed %}checked{% endif %}>Allow ticket owners to reopen their own closed tickets</label><p class="hint">Applies to requesters and supervisors immediately, including existing tickets. Technicians and administrators can always reopen any ticket.</p><div><button>Save policy</button></div></form>
+{% for kind,items in [('categories',categories),('priorities',priorities)] %}
+<section class="panel"><h2>{{ kind|title }}</h2><p class="hint">Deactivate used options instead of deleting them. Keep at least one option active. Names are unique regardless of case.</p>
+{% for item in items %}<form method="post" action="{{ url_for('taxonomy',kind=kind) }}" class="option-row">{{ csrf() }}<input type="hidden" name="id" value="{{ item.id }}"><label>Name<input name="name" value="{{ item.name }}" required maxlength="80"></label>{% if kind == 'priorities' %}<label>Sort order<input type="number" name="sort_order" value="{{ item.sort_order }}" min="-1000000" max="1000000"></label>{% endif %}<label class="check"><input type="checkbox" name="active" value="1" {% if item.active %}checked{% endif %}>Active</label><button class="secondary">Save</button></form>{% endfor %}
+<form method="post" action="{{ url_for('taxonomy',kind=kind) }}" class="option-row">{{ csrf() }}<input type="hidden" name="active" value="1"><label>New {{ 'category' if kind == 'categories' else 'priority' }}<input name="name" required maxlength="80" placeholder="Name"></label>{% if kind == 'priorities' %}<label>Sort order<input type="number" name="sort_order" value="0" min="-1000000" max="1000000"></label>{% endif %}<button>Add option</button></form>
+</section>{% endfor %}
+<details class="panel"><summary>Recent settings history (last 50 events)</summary><ol class="history">{% for e in events %}<li>{{ e.created_at[:19]|replace('T',' ') }} UTC · {{ e.actor_name }} · {{ e.action|replace('_',' ') }}<pre>{{ e.details }}</pre></li>{% else %}<li>No settings changes yet.</li>{% endfor %}</ol></details>
+{% endblock %}
